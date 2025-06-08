@@ -1,10 +1,10 @@
-require "check/calc"
-require "check/floodfill"
-require "check/mirror"
-require "check/matchshape"
-require "check/doublearea"
-require "check/tetris"
-require "check/distance"
-require "check/area2line"
-require "check/direction"
-require "check/basics"
+require("check/calc")
+require("check/floodfill")
+require("check/mirror")
+require("check/matchshape")
+require("check/doublearea")
+require("check/tetris")
+require("check/distance")
+require("check/area2line")
+require("check/direction")
+require("check/basics")

@@ -1,6 +1,6 @@
 local ffi = require("ffi")
 local path = (...):match("(.-)[^%.]+$")
-local api = require(path.."api")
+local api = require(path .. "api")
 local reg = debug.getregistry()
 
 local steam = { api = api }
@@ -35,7 +35,7 @@ end
 
 function steam.setAchievements(str)
   api.UserStats.RequestCurrentStats()
-	api.UserStats.SetAchievement(str)
+  api.UserStats.SetAchievement(str)
   api.UserStats.StoreStats()
 end
 -- Shuts down the Steam client interface
@@ -283,8 +283,7 @@ function steam.getSubscribedUGC(s, e)
   return list, n
 end
 
-local queries =
-{
+local queries = {
   popular = 0,
   recent = 1,
   friends = 5,
@@ -298,8 +297,8 @@ function steam.queryUGC(what, s, e, func, list)
     return
   end
 
-  local page = math.ceil(s/50)
-  local page2 = math.ceil(e/50)
+  local page = math.ceil(s / 50)
+  local page2 = math.ceil(e / 50)
 
   local appid = steam.getAppId()
   local query
@@ -316,7 +315,7 @@ function steam.queryUGC(what, s, e, func, list)
     if res == 1 then
       local d = ffi.new("SteamUGCDetails_t[1]")
       list = list or {}
-      local s2 = s - (page - 1)*50
+      local s2 = s - (page - 1) * 50
       local e2 = math.min(q.m_unNumResultsReturned, s2 + e - s)
       for q = s2, e2 do
         api.UGC.GetQueryUGCResult(query, q - 1, d)
@@ -330,23 +329,21 @@ function steam.queryUGC(what, s, e, func, list)
       api.Fail(res)
     end
     if page2 > page then
-      steam.queryUGC(what, (page2 - 1)*50 + 1, e, func, list)
+      steam.queryUGC(what, (page2 - 1) * 50 + 1, e, func, list)
     else
       func(res == 1, list, total)
     end
   end, query)
 end
 
-
-local genDialogs =
-{
+local genDialogs = {
   friends = true,
   community = true,
   players = true,
   settings = true,
   officialgamegroup = true,
   stats = true,
-  achievements = true
+  achievements = true,
 }
 
 -- Opens the Steam overlay if available to a specific dialog or page.
@@ -354,7 +351,7 @@ local genDialogs =
 -- @param p2 User object (optional)
 -- @return True if the overlay is enabled
 function steam.activateOverlay(p1, p2)
-  p1 = p1 or 'friends'
+  p1 = p1 or "friends"
   if genDialogs[p1] then
     -- dialog
     api.Friends.ActivateGameOverlay(p1)
@@ -370,8 +367,7 @@ end
 -- Sets the notifcation position and offset.
 -- @param pos Target corner
 -- @param ox, oy Inset from the corner (optional)
-local positions =
-{
+local positions = {
   topleft = 0,
   topright = 1,
   bottomleft = 2,
@@ -392,7 +388,7 @@ end
 
 -- Gets the selected language code for the current game or the client.
 -- @return Language code
-local langs = require(path.."languages")
+local langs = require(path .. "languages")
 function steam.getLanguage()
   return langs[ffi.string(api.Apps.GetCurrentGameLanguage())]
 end
@@ -411,7 +407,7 @@ end
 -- check if we are in a 'ready' state
 local ignore = { init = true, isRunning = true, restart = true }
 for k, v in pairs(steam) do
-  if type(v) == 'function' and not ignore[k] then
+  if type(v) == "function" and not ignore[k] then
     local w = function(...)
       if not isready then
         api.Fail(3)

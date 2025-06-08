@@ -7,8 +7,7 @@ local Socket = {}
 setmetatable(Socket, { __index = reg.Handle })
 reg.Socket = Socket
 
-local kinds =
-{
+local kinds = {
   unreliable = 0,
   nodelay = 1,
   reliable = 2,
@@ -18,7 +17,7 @@ local kinds =
 function Socket:init(ch, kind)
   self.channel = ch or 0
   self.peer = nil
-  self.kind = kinds[kind or 'unreliable']
+  self.kind = kinds[kind or "unreliable"]
 end
 
 function Socket:destroy()
@@ -61,16 +60,16 @@ function Socket:send(data, user)
   return api.Networking.SendP2PPacket(user.handle, data, #data, self.kind, self.channel)
 end
 
-local buffer = ffi.new('unsigned char[1024]')
-local size = ffi.new('int[1]')
-local sender = ffi.new('CSteamID[1]')
+local buffer = ffi.new("unsigned char[1024]")
+local size = ffi.new("int[1]")
+local sender = ffi.new("CSteamID[1]")
 function Socket:receive()
   if api.Networking.IsP2PPacketAvailable(size, self.channel) then
     local packet = buffer
     local n = size[0]
     if n > 1024 then
       -- only allocate if this packet exceeds the buffer size
-      packet = ffi.new('char[?]', n)
+      packet = ffi.new("char[?]", n)
     end
     if api.Networking.ReadP2PPacket(packet, n, size, sender, self.channel) then
       if not self.peer or self.peer.handle == sender[0].m_steamid.m_unAll64Bits then
@@ -81,7 +80,7 @@ function Socket:receive()
   end
 end
 
-local state = ffi.new('P2PSessionState_t')
+local state = ffi.new("P2PSessionState_t")
 function Socket:getAddress(user)
   user = user or self.peer
   if api.Networking.GetP2PSessionState(user.handle, state) then

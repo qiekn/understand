@@ -49,7 +49,7 @@ function Clan:requestOfficers(func)
       if res == 1 then
         list = self:getOfficers()
       end
-      self:callback(func or 'onReceiveOfficers', res, list)
+      self:callback(func or "onReceiveOfficers", res, list)
     end
   end, self.handle)
 end
@@ -69,7 +69,7 @@ function Clan:requestActivity(func)
   api.Friends.DownloadClanActivityCounts(function(q)
     if self.handle then
       local res = (q and q.m_bSuccess) and 1 or 0
-      self:callback(func or 'onReceiveActivity', res)
+      self:callback(func or "onReceiveActivity", res)
     end
   end, array, 1)
 end
@@ -78,7 +78,7 @@ function Clan:joinChat(func)
   api.Friends.JoinClanChatRoom(function(q)
     if self.handle then
       local res = (q and q.m_eChatRoomEnterResponse == 1) and 1 or 0
-      self:callback(func or 'onJoinChat', res)
+      self:callback(func or "onJoinChat", res)
     end
   end, self.handle)
 end

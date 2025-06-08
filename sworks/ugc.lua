@@ -13,8 +13,7 @@ function UGC:init(id, appid)
   self.appid = appid or api.Utils.GetAppID()
 end
 
-local kinds =
-{
+local kinds = {
   community = 0,
   micro = 1,
   collection = 2,
@@ -43,7 +42,7 @@ function UGC:create(kind, appid, func)
       --self.owner = api.User.GetSteamID()
       self.appid = appid
     end
-    self:callback(func or 'onCreate', res)
+    self:callback(func or "onCreate", res)
   end, appid, kind)
 end
 
@@ -61,7 +60,7 @@ function UGC:subscribe(func)
   return api.UGC.SubscribeItem(function(q)
     if self.handle then
       local res = q and q.m_eResult or 0
-      self:callback(func or 'onSubscribe', res)
+      self:callback(func or "onSubscribe", res)
     end
   end, self.handle)
 end
@@ -116,9 +115,9 @@ function UGC:getDetails(query, index)
   data.accepted = d.m_bAcceptedForUse
   if d.m_rgchTags ~= ffi.NULL then
     data.tags = {}
-    local s = ffi.string(d.m_rgchTags)..","
-    for tag in s:gmatch('([^,]+)') do
-      if tag ~= '' then
+    local s = ffi.string(d.m_rgchTags) .. ","
+    for tag in s:gmatch("([^,]+)") do
+      if tag ~= "" then
         table.insert(data.tags, tag)
       end
     end
@@ -156,7 +155,7 @@ function UGC:fetch(func)
         data = self:getDetails(query, 0)
       end
       api.UGC.ReleaseQueryUGCRequest(query)
-      self:callback(func or 'onFetch', res, data)
+      self:callback(func or "onFetch", res, data)
     end
   end, query)
 end
@@ -214,7 +213,7 @@ function UGC:update(path, data, note, func)
       if res == 1 then
         agree = q.m_bUserNeedsToAcceptWorkshopLegalAgreement
       end
-      self:callback(func or 'onUpdate', res, agree)
+      self:callback(func or "onUpdate", res, agree)
     end
   end, query, note)
 end
@@ -230,7 +229,7 @@ function UGC:delete(func)
         self.handle = nil
         --self.owner = nil
       end
-      self:callback(func or 'onDelete', res)
+      self:callback(func or "onDelete", res)
     end
   end, self.handle)
 end
@@ -241,7 +240,7 @@ function UGC:startTracking(func)
   api.UGC.StartPlaytimeTracking(function(q)
     if self.handle then
       local res = q and q.m_eResult or 0
-      self:callback(func or 'onStartTracking', res)
+      self:callback(func or "onStartTracking", res)
     end
   end, array, 1)
 end
@@ -251,7 +250,7 @@ function UGC:stopTracking(func)
   return api.UGC.StopPlaytimeTracking(function(q)
     if self.handle then
       local res = q and q.m_eResult or 0
-      self:callback(func or 'onStopTracking', res)
+      self:callback(func or "onStopTracking", res)
     end
   end, array, 1)
 end

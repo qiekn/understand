@@ -1,6 +1,6 @@
 local ffi = require("ffi")
 local win = ffi.os == "Windows"
-local little = ffi.abi('le')
+local little = ffi.abi("le")
 local x64 = ffi.abi("64bit")
 
 ffi.cdef([[
@@ -1268,7 +1268,7 @@ typedef struct CSteamID_LE
 typedef union CSteamID_union
 {
   uint64 m_unAll64Bits;
-  CSteamID_]]..(little and 'LE' or 'BE')..[[ m_comp;
+  CSteamID_]] .. (little and "LE" or "BE") .. [[ m_comp;
 } CSteamID_union;
 typedef struct CSteamID
 {
@@ -1290,7 +1290,7 @@ typedef struct CGameID_LE
 typedef union CGameID_union
 {
   uint64 raw;
-  CGameID_]]..(little and 'LE' or 'BE')..[[ parts;
+  CGameID_]] .. (little and "LE" or "BE") .. [[ parts;
 } CGameID_union;
 
 #pragma pop();
@@ -1374,7 +1374,7 @@ static const uint32 k_cchPublishedDocumentDescriptionMax = 8000;
 static const uint32 k_cchTagListMax = 1024 + 1;
 
 // structs are 8 byte aligned on Windows, 4 byte aligned on OSX/Linux
-#pragma pack(push, ]]..(win and 8 or 4)..[[);
+#pragma pack(push, ]] .. (win and 8 or 4) .. [[);
 
 typedef struct LobbyCreated_t
 {
@@ -1480,7 +1480,7 @@ typedef struct FriendGameInfo_t
 } FriendGameInfo_t;
 
 // structs are 8 byte aligned on Windows, 4 byte aligned on OSX/Linux
-#pragma pack(push, ]]..(win and 8 or 4)..[[);
+#pragma pack(push, ]] .. (win and 8 or 4) .. [[);
 
 typedef struct UserStatsStored_t
 {

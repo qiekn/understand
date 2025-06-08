@@ -7,8 +7,7 @@ local Lobby = {}
 setmetatable(Lobby, { __index = reg.Handle })
 reg.Lobby = Lobby
 
-local kinds =
-{
+local kinds = {
   private = 0,
   friends = 1,
   public = 2,
@@ -16,7 +15,7 @@ local kinds =
 }
 
 function Lobby:create(kind, limit, func)
-  kind = kinds[kind or 'public']
+  kind = kinds[kind or "public"]
   limit = limit or 250
   assert(not self.handle and kind)
   self.handle = api.CSteamID_Invalid
@@ -26,7 +25,7 @@ function Lobby:create(kind, limit, func)
       if res == 1 then
         self:init(q.m_ulSteamIDLobby)
       end
-      self:callback(func or 'onCreate', res)
+      self:callback(func or "onCreate", res)
     end
   end, kind, limit)
 end
@@ -48,7 +47,7 @@ function Lobby:join(func)
       if res == 1 then
         user = steam.getUser()
       end
-      self:callback(func or 'onJoin', res, user)
+      self:callback(func or "onJoin", res, user)
     end
   end, self.handle)
 end
@@ -121,7 +120,7 @@ function Lobby:getData(p1, p2)
   end
   if s and s ~= ffi.null then
     s = ffi.string(s)
-    return s ~= '' and s or nil
+    return s ~= "" and s or nil
   end
 end
 

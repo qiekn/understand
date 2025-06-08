@@ -63,7 +63,7 @@ function User:getAvatar(size)
   end
   if index > 0 and api.Utils.GetImageSize(index, width, height) then
     local w, h = width[0], height[0]
-    local n = w*h*4
+    local n = w * h * 4
     local b = ffi.new("char[?]", n)
     api.Utils.GetImageRGBA(index, b, n)
     return (b == ffi.NULL) and "" or ffi.string(b, n), w, h
@@ -116,7 +116,7 @@ function User:requestStats(func)
   return api.UserStats.RequestUserStats(function(q)
     if self.handle then
       local res = q and q.m_eResult or 0
-      self:callback(func or 'onReceiveStats', res)
+      self:callback(func or "onReceiveStats", res)
     end
   end, self.handle)
 end
@@ -145,8 +145,7 @@ function User:getGamePlayed()
   return appid, lobby
 end
 
-local userDialogs = 
-{
+local userDialogs = {
   steamid = true,
   chat = true,
   jointrade = true,

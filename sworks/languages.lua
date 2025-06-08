@@ -1,5 +1,4 @@
-return
-{
+return {
   arabic = "ar",
   bulgarian = "bg",
   schinese = "zh_cn",

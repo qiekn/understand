@@ -16,7 +16,7 @@ function Board:init(name, func)
       if res == 1 then
         self.handle = q.m_hSteamLeaderboard
       end
-      self:callback(func or 'onFind', res)
+      self:callback(func or "onFind", res)
     end
   end, name)
 end
@@ -36,7 +36,7 @@ function Board:create(name, sort, display, func)
       if res == 1 then
         self.handle = q.m_hSteamLeaderboard
       end
-      self:callback(func or 'onCreate', res)
+      self:callback(func or "onCreate", res)
     end
   end, name, sort, display)
 end
@@ -58,7 +58,7 @@ function Board:attach(ugc, func)
   api.UserStats.AttachLeaderboardUGC(function(q)
     if self.handle then
       local res = q and q.m_eResult or 0
-      self:callback(func or 'onAttach', res, ugc)
+      self:callback(func or "onAttach", res, ugc)
     end
   end, self.handle, ugc.handle)
   return true
@@ -78,7 +78,7 @@ function Board:upload(score, method, func)
       if q then
         changed = (q.m_bScoreChanged > 0) or (q.m_nGlobalRankPrevious ~= q.m_nGlobalRankNew)
       end
-      self:callback(func or 'onUpload', res, changed)
+      self:callback(func or "onUpload", res, changed)
     end
   end, self.handle, method, score, nil, 0)
 end
@@ -89,7 +89,7 @@ local filters = { global = 0, user = 1, friends = 2 }
 function Board:download(what, i, j, func)
   local filter = filters[what or "global"] or 0
   assert(filter)
-  
+
   local fetch = function(q)
     if self.handle then
       local res = q and 1 or 0
@@ -116,10 +116,10 @@ function Board:download(what, i, j, func)
           end
         end
       end
-      self:callback(func or 'onDownload', res, list, count)
+      self:callback(func or "onDownload", res, list, count)
     end
   end
-  
+
   if type(what) == "table" then
     local array = ffi.new("CSteamID[?]", #what)
     for i, v in ipairs(what) do

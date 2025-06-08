@@ -12,12 +12,15 @@ function Handle:new()
   assert(self ~= nil and self ~= Handle)
   local mt = metas[self]
   if not mt then
-    mt = { __index = self, __eq = function(a, b)
-      if getmetatable(a) ~= getmetatable(b) then
-        return false
-      end
-      return a:getId() == b:getId()
-    end }
+    mt = {
+      __index = self,
+      __eq = function(a, b)
+        if getmetatable(a) ~= getmetatable(b) then
+          return false
+        end
+        return a:getId() == b:getId()
+      end,
+    }
     metas[self] = mt
   end
   return setmetatable({}, mt)

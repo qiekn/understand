@@ -1,60 +1,61 @@
 local ffi = require("ffi")
 local path = (...):match("(.-)[^%.]+$")
-local callbacks = require(path.."callbacks")
+local callbacks = require(path .. "callbacks")
 
 local api = {}
 
-local interfaces =
-{
-  Apps = 'STEAMAPPS_INTERFACE_VERSION008',
-  AppList = 'STEAMAPPLIST_INTERFACE_VERSION001',
+local interfaces = {
+  Apps = "STEAMAPPS_INTERFACE_VERSION008",
+  AppList = "STEAMAPPLIST_INTERFACE_VERSION001",
   --AppTicket = 'STEAMAPPTICKET_INTERFACE_VERSION001',
   --Client = 'SteamClient020',
-  Controller = 'SteamController007',
+  Controller = "SteamController007",
   --GameCoordinator = 'SteamGameCoordinator001',
   --GameSearch = nil,
---  GameServer = 'SteamGameServer013',
---  GameServerStats = 'SteamGameServerStats001',
-  HTMLSurface = 'STEAMHTMLSURFACE_INTERFACE_VERSION_005',
-  HTTP = 'STEAMHTTP_INTERFACE_VERSION003',
-  Input = 'SteamInput001',
-  Inventory = 'STEAMINVENTORY_INTERFACE_V003',
-  Friends = 'SteamFriends017',
-  Matchmaking = 'SteamMatchMaking009',
-  MatchmakingServers = 'SteamMatchMakingServers002',
-  Music = 'STEAMMUSIC_INTERFACE_VERSION001',
-  MusicRemote = 'STEAMMUSICREMOTE_INTERFACE_VERSION001',
-  Networking = 'SteamNetworking006',
+  --  GameServer = 'SteamGameServer013',
+  --  GameServerStats = 'SteamGameServerStats001',
+  HTMLSurface = "STEAMHTMLSURFACE_INTERFACE_VERSION_005",
+  HTTP = "STEAMHTTP_INTERFACE_VERSION003",
+  Input = "SteamInput001",
+  Inventory = "STEAMINVENTORY_INTERFACE_V003",
+  Friends = "SteamFriends017",
+  Matchmaking = "SteamMatchMaking009",
+  MatchmakingServers = "SteamMatchMakingServers002",
+  Music = "STEAMMUSIC_INTERFACE_VERSION001",
+  MusicRemote = "STEAMMUSICREMOTE_INTERFACE_VERSION001",
+  Networking = "SteamNetworking006",
   --NetworkingSockets = 'SteamNetworkingSockets009',
-  ParentalSettings = 'STEAMPARENTALSETTINGS_INTERFACE_VERSION001',
-  Parties = 'SteamParties002',
-  RemotePlay = 'STEAMREMOTEPLAY_INTERFACE_VERSION001',
-  RemoteStorage = 'STEAMREMOTESTORAGE_INTERFACE_VERSION014',
-  Screenshots = 'STEAMSCREENSHOTS_INTERFACE_VERSION003',
-  UGC = 'STEAMUGC_INTERFACE_VERSION014',
-  User = 'SteamUser021',
-  UserStats = 'STEAMUSERSTATS_INTERFACE_VERSION012',
-  Utils = 'SteamUtils010',
-  Video = 'STEAMVIDEO_INTERFACE_V002',
+  ParentalSettings = "STEAMPARENTALSETTINGS_INTERFACE_VERSION001",
+  Parties = "SteamParties002",
+  RemotePlay = "STEAMREMOTEPLAY_INTERFACE_VERSION001",
+  RemoteStorage = "STEAMREMOTESTORAGE_INTERFACE_VERSION014",
+  Screenshots = "STEAMSCREENSHOTS_INTERFACE_VERSION003",
+  UGC = "STEAMUGC_INTERFACE_VERSION014",
+  User = "SteamUser021",
+  UserStats = "STEAMUSERSTATS_INTERFACE_VERSION012",
+  Utils = "SteamUtils010",
+  Video = "STEAMVIDEO_INTERFACE_V002",
 }
 
 function api.Init()
   if not api.lib then
-    print(path.."flat")
-    api.lib = require(path.."flat")
+    print(path .. "flat")
+    api.lib = require(path .. "flat")
 
     api.CSteamID_Invalid = 0
     api.UGCHandle_Invalid = 0xffffffffffffffffULL
 
     -- include the SteamAPI_ prefix
-    setmetatable(api, { __index = function(t, k)
-      local raw = rawget(t, k)
-      if raw == nil then
-        raw = api.lib['SteamAPI_'..k]
-        rawset(t, k, raw)
-      end
-      return raw
-    end })
+    setmetatable(api, {
+      __index = function(t, k)
+        local raw = rawget(t, k)
+        if raw == nil then
+          raw = api.lib["SteamAPI_" .. k]
+          rawset(t, k, raw)
+        end
+        return raw
+      end,
+    })
   end
 
   if not api.lib.SteamAPI_Init() then
@@ -64,60 +65,62 @@ function api.Init()
 
   local function ISteam(prefix, inst)
     local q = {}
-    setmetatable(q, { __index = function(t, k)
-      print(k)
-      if k=="requestCurrentStats" then
-        k="RequestCurrentStats"
-      end
-      if k=="storeStats" then
-        k="StoreStats"
-      end
-      print(k)
-      local raw = rawget(t, k)
-      if raw == nil then
-        local j = "SteamAPI_ISteam"..prefix.."_"..k
-        local e = callbacks[j]
-        local f = api.lib[j]
-        raw = function(func, ...)
-          local res
-          if e and type(func) == "function" then
-            -- register callbacks per result
-            res = f(inst, ...)
-            --assert(ffi.istype("SteamAPICall_t", res))
-            api.Register(func, e, res)
-          elseif func ~= nil then
-            res = f(inst, func, ...)
-          else
-            res = f(inst, ...)
-          end
-          return res
+    setmetatable(q, {
+      __index = function(t, k)
+        print(k)
+        if k == "requestCurrentStats" then
+          k = "RequestCurrentStats"
         end
-        -- cache functions
-        rawset(t, k, raw)
-      end
-      return raw
-    end })
+        if k == "storeStats" then
+          k = "StoreStats"
+        end
+        print(k)
+        local raw = rawget(t, k)
+        if raw == nil then
+          local j = "SteamAPI_ISteam" .. prefix .. "_" .. k
+          local e = callbacks[j]
+          local f = api.lib[j]
+          raw = function(func, ...)
+            local res
+            if e and type(func) == "function" then
+              -- register callbacks per result
+              res = f(inst, ...)
+              --assert(ffi.istype("SteamAPICall_t", res))
+              api.Register(func, e, res)
+            elseif func ~= nil then
+              res = f(inst, func, ...)
+            else
+              res = f(inst, ...)
+            end
+            return res
+          end
+          -- cache functions
+          rawset(t, k, raw)
+        end
+        return raw
+      end,
+    })
     return q
   end
 
   local user = api.GetHSteamUser()
   local pipe = api.GetHSteamPipe()
-  local client = api.lib.SteamInternal_CreateInterface('SteamClient020')
-  local utils = api.lib.SteamAPI_ISteamClient_GetISteamUtils(client, pipe, 'SteamUtils009')
-  api.Client = ISteam('Client', client)
-  api.Utils = ISteam('Utils', utils)
+  local client = api.lib.SteamInternal_CreateInterface("SteamClient020")
+  local utils = api.lib.SteamAPI_ISteamClient_GetISteamUtils(client, pipe, "SteamUtils009")
+  api.Client = ISteam("Client", client)
+  api.Utils = ISteam("Utils", utils)
   -- intefaces
   local user = api.lib.SteamAPI_GetHSteamUser()
   for prefix, ver in pairs(interfaces) do
     if not rawget(api, prefix) then
       -- C interface
-      local func = api.lib['SteamAPI_ISteamClient_GetISteam'..prefix]
+      local func = api.lib["SteamAPI_ISteamClient_GetISteam" .. prefix]
       local inst = func(client, user, pipe, ver)
       if not (inst and inst ~= 0) then
         print(prefix)
         return false
       end
---      assert(inst and inst ~= 0, ver)
+      --      assert(inst and inst ~= 0, ver)
       -- Lua-friendly interface
       api[prefix] = ISteam(prefix, inst)
     end
@@ -126,13 +129,13 @@ function api.Init()
   --local socks = api.lib.SteamAPI_SteamNetworkingSockets_v009()
   --api.NetworkingSockets = ISteam('NetworkingSockets', socks)
 
-  require(path.."handle")
-  require(path.."user")
-  require(path.."ugc")
-  require(path.."board")
-  require(path.."clan")
-  require(path.."socket")
-  require(path.."lobby")
+  require(path .. "handle")
+  require(path .. "user")
+  require(path .. "ugc")
+  require(path .. "board")
+  require(path .. "clan")
+  require(path .. "socket")
+  require(path .. "lobby")
 
   local ucall = {}
   local utype = {}
@@ -207,7 +210,7 @@ end
 
 function api.Shutdown()
   for k, v in pairs(api) do
-    if type(v) == 'table' then
+    if type(v) == "table" then
       api[k] = nil
     end
   end
@@ -217,7 +220,7 @@ function api.Shutdown()
   end
 end
 
-local errors = require(path.."errors")
+local errors = require(path .. "errors")
 function api.Fail(code)
   local msg = errors[code or 0]
   print(msg)

@@ -1,64 +1,42 @@
 --area can be divided into 2
 
-newlevel={}
+newlevel = {}
 
-newlevel.level_str={
-  {"S C",
-   " S "},
-  {"S C",
-   "   ",
-   "S C"},
-  {"S  C "},
-  {"   S C "},
-  {"....",
-   ".SS.",
-   "....",
-   "C..."},
-  {"S..C",
-   ".S..",
-   "...C"},
-  {"S C ",
-   "C S ",
-   "    "},
-  {"    ",
-   "SCSC",
-   "    ",
-   "    "},
-  {" SC ",
-   "S S ",
-   " S  ",
-   "    "},
-  {"S C  ",
-   "     ",
-   "  CS ",
-   "     "},
-  {"   C  ",
-   "S S SC",
-   "C     ",
-   "  C   "}
+newlevel.level_str = {
+  { "S C", " S " },
+  { "S C", "   ", "S C" },
+  { "S  C " },
+  { "   S C " },
+  { "....", ".SS.", "....", "C..." },
+  { "S..C", ".S..", "...C" },
+  { "S C ", "C S ", "    " },
+  { "    ", "SCSC", "    ", "    " },
+  { " SC ", "S S ", " S  ", "    " },
+  { "S C  ", "     ", "  CS ", "     " },
+  { "   C  ", "S S SC", "C     ", "  C   " },
 }
 
-newlevel.correct_num=4
+newlevel.correct_num = 4
 
-newlevel.hint={
-  {x=3,y=1},
-  {x=3,y=2}
+newlevel.hint = {
+  { x = 3, y = 1 },
+  { x = 3, y = 2 },
 }
 
 function newlevel.checkVictory()
   FloodFill()
-  local ans=0
-  local ans2=true
-  shapes={}
-  for i=1,len(FloodFillRes[currentPanel]) do
-    if FloodFillShapeCount[currentPanel][i]["S"]~=nil then
-      ans=ans+1
-      ans2=ans2 and cut_solve(FloodFillRes[currentPanel][i],2,false)
+  local ans = 0
+  local ans2 = true
+  shapes = {}
+  for i = 1, len(FloodFillRes[currentPanel]) do
+    if FloodFillShapeCount[currentPanel][i]["S"] ~= nil then
+      ans = ans + 1
+      ans2 = ans2 and cut_solve(FloodFillRes[currentPanel][i], 2, false)
     end
   end
-  correct[currentPanel][1]=isCover("C")
-  correct[currentPanel][2]=isBlock("S")
-  correct[currentPanel][3]=(ans==1)
-  correct[currentPanel][4]=ans2
+  correct[currentPanel][1] = isCover("C")
+  correct[currentPanel][2] = isBlock("S")
+  correct[currentPanel][3] = (ans == 1)
+  correct[currentPanel][4] = ans2
 end
 return newlevel
