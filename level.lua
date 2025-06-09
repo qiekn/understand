@@ -16,16 +16,16 @@ World 8: Polyomino
 World 9: Turn
 World 10: Mix
 ]]
-src1 = love.audio.newSource("sound/positive.ogg", "static")
-src2 = love.audio.newSource("sound/negative.ogg", "static")
-src3 = love.audio.newSource("sound/win.ogg", "static")
-src4 = love.audio.newSource("sound/strongnegative.ogg", "static")
-src5 = love.audio.newSource("sound/levelstart.ogg", "static")
-src6 = love.audio.newSource("sound/reset.ogg", "static")
+src1 = love.audio.newSource("assets/audio/positive.ogg", "static")
+src2 = love.audio.newSource("assets/audio/negative.ogg", "static")
+src3 = love.audio.newSource("assets/audio/win.ogg", "static")
+src4 = love.audio.newSource("assets/audio/strongnegative.ogg", "static")
+src5 = love.audio.newSource("assets/audio/levelstart.ogg", "static")
+src6 = love.audio.newSource("assets/audio/reset.ogg", "static")
 
-fullscreen_sprite = love.graphics.newImage("pic/fullscreen1.png")
-fullscreen_sprite2 = love.graphics.newImage("pic/fullscreen2.png")
-sound_sprite = love.graphics.newImage("pic/sound.png")
+fullscreen_sprite = love.graphics.newImage("assets/images/fullscreen1.png")
+fullscreen_sprite2 = love.graphics.newImage("assets/images/fullscreen2.png")
+sound_sprite = love.graphics.newImage("assets/images/sound.png")
 
 --default_hint_time=-1000
 
@@ -36,7 +36,7 @@ src4:setVolume(0.2)
 src5:setVolume(0.15)
 src6:setVolume(0.1)
 
-cursor = love.mouse.newCursor("pic/cursor.png", 16, 16)
+cursor = love.mouse.newCursor("assets/images/cursor.png", 16, 16)
 
 function stopsound(src)
   if mute == 0 then
@@ -228,9 +228,9 @@ function level.draw()
     if fontsize < 2 then
       fontsize = 2
     end
-    font = love.graphics.newFont("Han.otf", fontsize)
+    font = love.graphics.newFont(FONT_DIR .. "han.otf", fontsize)
     love.graphics.setFont(font)
-    font2 = love.graphics.newFont("Han.otf", fontsize / 2)
+    font2 = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize / 2)
   end
 
   love.graphics.setFont(font)

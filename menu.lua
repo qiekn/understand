@@ -12,7 +12,7 @@ mute = 0
 
 level_time = {}
 
-sound_sprite = love.graphics.newImage("pic/sound.png")
+sound_sprite = love.graphics.newImage("assets/images/sound.png")
 
 isfullscreen = false
 
@@ -68,8 +68,8 @@ function menu.draw()
     if fontsize < 2 then
       fontsize = 2
     end
-    font = love.graphics.newFont("Han.otf", fontsize)
-    font2 = love.graphics.newFont("Han.otf", fontsize * 2)
+    font = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize)
+    font2 = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize * 2)
   end
 
   backcolor = backcolor_menu
@@ -580,16 +580,16 @@ function menu.load()
 
   print("hello")
   --[[  menu_sprites={}
-  menu_sprites["1"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["2"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["3"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["4"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["5"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["6"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["7"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["8"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["9"]=love.graphics.newImage("pic/world1.png")
-  menu_sprites["10"]=love.graphics.newImage("pic/world1.png")
+  menu_sprites["1"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["2"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["3"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["4"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["5"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["6"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["7"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["8"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["9"]=love.graphics.newImage("assets/images/world1.png")
+  menu_sprites["10"]=love.graphics.newImage("assets/images/world1.png")
 ]]
   --[[  local board_total=0
   for i=1,len(menu_panel) do

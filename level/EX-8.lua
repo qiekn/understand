@@ -50,22 +50,22 @@ newlevel.level_str = {
 
 newlevel.sprites = {}
 
-newlevel.sprites["1"] = love.graphics.newImage("pic/hex.png")
-newlevel.sprites["2"] = love.graphics.newImage("pic/round.png")
-newlevel.sprites["3"] = love.graphics.newImage("pic/oct.png")
-newlevel.sprites["4"] = love.graphics.newImage("pic/tri.png")
-newlevel.sprites["5"] = love.graphics.newImage("pic/poly.png")
-newlevel.sprites["6"] = love.graphics.newImage("pic/anti.png")
-newlevel.sprites["7"] = love.graphics.newImage("pic/baba.png")
-newlevel.sprites["8"] = love.graphics.newImage("pic/flag.png")
-newlevel.sprites["9"] = love.graphics.newImage("pic/keke.png")
-newlevel.sprites["k"] = love.graphics.newImage("pic/key.png")
-newlevel.sprites["a"] = love.graphics.newImage("pic/portal2.png")
-newlevel.sprites["b"] = love.graphics.newImage("pic/portal.png")
-newlevel.sprites["c"] = love.graphics.newImage("pic/heart.png")
-newlevel.sprites["f"] = love.graphics.newImage("pic/fez2.png")
-newlevel.sprites["p"] = love.graphics.newImage("pic/rose.png")
-newlevel.sprites["q"] = love.graphics.newImage("pic/violet.png")
+newlevel.sprites["1"] = love.graphics.newImage("assets/images/hex.png")
+newlevel.sprites["2"] = love.graphics.newImage("assets/images/round.png")
+newlevel.sprites["3"] = love.graphics.newImage("assets/images/oct.png")
+newlevel.sprites["4"] = love.graphics.newImage("assets/images/tri.png")
+newlevel.sprites["5"] = love.graphics.newImage("assets/images/poly.png")
+newlevel.sprites["6"] = love.graphics.newImage("assets/images/anti.png")
+newlevel.sprites["7"] = love.graphics.newImage("assets/images/baba.png")
+newlevel.sprites["8"] = love.graphics.newImage("assets/images/flag.png")
+newlevel.sprites["9"] = love.graphics.newImage("assets/images/keke.png")
+newlevel.sprites["k"] = love.graphics.newImage("assets/images/key.png")
+newlevel.sprites["a"] = love.graphics.newImage("assets/images/portal2.png")
+newlevel.sprites["b"] = love.graphics.newImage("assets/images/portal.png")
+newlevel.sprites["c"] = love.graphics.newImage("assets/images/heart.png")
+newlevel.sprites["f"] = love.graphics.newImage("assets/images/fez2.png")
+newlevel.sprites["p"] = love.graphics.newImage("assets/images/rose.png")
+newlevel.sprites["q"] = love.graphics.newImage("assets/images/violet.png")
 
 newlevel.correct_num = 1
 

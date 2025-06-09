@@ -17,7 +17,7 @@ function newlevel.LoadLevel()
   timer = -10000
 end
 
---logo=love.graphics.newImage("pic/logo2.png")
+--logo=love.graphics.newImage("assets/images/logo2.png")
 
 function newlevel.ReplaceDraw()
   mapWidth = mapW[currentPanel]
@@ -66,9 +66,9 @@ function newlevel.ReplaceDraw()
   f2 = min(screenHeight / 18, screenWidth / 18)
   if f2 ~= fontsize then
     fontsize = f2
-    font = love.graphics.newFont("Han.otf", fontsize)
+    font = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize)
     love.graphics.setFont(font)
-    font2 = love.graphics.newFont("Han.otf", fontsize / 2)
+    font2 = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize / 2)
   end
 
   --  local w,h=logo:getDimensions()
@@ -286,7 +286,7 @@ function newlevel.ReplaceDraw()
   if gamestate == "draw" then
     display = getlast(visit[currentPanel]).x
     if showcase[display] == nil then
-      showcase[display] = love.graphics.newImage("pic/s" .. tonumber(display) .. ".png")
+      showcase[display] = love.graphics.newImage("assets/images/s" .. tonumber(display) .. ".png")
     end
     local w, h = showcase[display]:getDimensions()
     local w0, h0 = showcase[display]:getDimensions()

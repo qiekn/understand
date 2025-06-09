@@ -1,3 +1,4 @@
+require("global")
 require("test/printtable")
 require("menu")
 require("graph/drawing")
@@ -20,9 +21,9 @@ isDemo = false
 isDebug = false
 solve_tot = 0
 
-cursor_normal = love.mouse.newCursor("pic/c1_transparent.png", 16, 16)
-cursor_click = love.mouse.newCursor("pic/c2_transparent.png", 16, 16)
-cursor_draw = love.mouse.newCursor("pic/c1_transparent.png", 16, 16)
+cursor_normal = love.mouse.newCursor("assets/images/c1_transparent.png", 16, 16)
+cursor_click = love.mouse.newCursor("assets/images/c2_transparent.png", 16, 16)
+cursor_draw = love.mouse.newCursor("assets/images/c1_transparent.png", 16, 16)
 
 function love.draw()
   if gamestate == "menu" then
@@ -44,7 +45,7 @@ end
 screenWidth = 1280
 screenHeight = 720
 
-logo_sprite = love.graphics.newImage("pic/Artless.png")
+logo_sprite = love.graphics.newImage("assets/images/Artless.png")
 local w, h = logo_sprite:getDimensions()
 love.graphics.clear()
 love.graphics.draw(logo_sprite, love.graphics.getWidth() / 2 - w / 2, love.graphics.getHeight() / 2 - h / 2, 0, 1, 1)
@@ -59,7 +60,7 @@ function love.load()
     AllIsSolve = false
   end
   --	love.window.setFullscreen(true,"desktop")
-  font = love.graphics.newFont("Han.otf", 24)
+  font = love.graphics.newFont(FONT_DIR .. "Han.otf", 24)
   love.graphics.setFont(font)
   frontcolor = { 255 / 255, 245 / 255, 211 / 255 }
   backcolor = { 249 / 255, 168 / 255, 117 / 255 }
