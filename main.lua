@@ -9,6 +9,10 @@ require("graph/ui")
 require("save")
 require("readcsv")
 
+------------------------------------------------------------------------
+--                          Global Variables                          --
+------------------------------------------------------------------------
+
 gamestate = ""
 isMouse = true
 version = "1.2.0"
@@ -24,35 +28,29 @@ solve_tot = 0
 cursor_normal = love.mouse.newCursor("assets/images/c1_transparent.png", 16, 16)
 cursor_click = love.mouse.newCursor("assets/images/c2_transparent.png", 16, 16)
 cursor_draw = love.mouse.newCursor("assets/images/c1_transparent.png", 16, 16)
-
-function love.draw()
-  if gamestate == "menu" then
-    menu.draw()
-  elseif gamestate == "ready" or gamestate == "draw" then
-    level.draw()
-  end
-end
-
-function love.keypressed(key)
-  print(key)
-  if key == "tab" then
-    --      local state = not love.mouse.isVisible()
-    --      love.mouse.setVisible(state)
-  end
-  presskey = key
-end
+logo_sprite = love.graphics.newImage("assets/images/Artless.png")
 
 screenWidth = 1280
 screenHeight = 720
 
-logo_sprite = love.graphics.newImage("assets/images/Artless.png")
+presskey = "none"
+lastkey = "none"
+lastkey_time = -10000
+lastclick_time = -10000
+
+------------------------------------------------------------------------
+--                            Artless Logo                            --
+------------------------------------------------------------------------
+
 local w, h = logo_sprite:getDimensions()
 love.graphics.clear()
 love.graphics.draw(logo_sprite, love.graphics.getWidth() / 2 - w / 2, love.graphics.getHeight() / 2 - h / 2, 0, 1, 1)
 love.graphics.present()
 game_start_time = love.timer.getTime()
 
-presskey = "none"
+------------------------------------------------------------------------
+--                      Löve Callback Functions                       --
+------------------------------------------------------------------------
 
 function love.load()
   if isDebug ~= true then
@@ -84,9 +82,7 @@ function love.load()
   --love.window.setFullscreen(true,"desktop")
 end
 
-iiiii = 0
 function love.update(dt)
-  print(love.timer.getFPS())
   presskey = "none"
   collectgarbage("collect")
   if gamestate == "menu" then
@@ -96,10 +92,14 @@ function love.update(dt)
   end
 end
 
-lastkey = "none"
-lastkey_time = -10000
+function love.draw()
+  if gamestate == "menu" then
+    menu.draw()
+  elseif gamestate == "ready" or gamestate == "draw" then
+    level.draw()
+  end
+end
 
-lastclick_time = -10000
 function love.mousepressed(x, y, button, isTouch)
   love.mouse.setCursor(cursor_click)
   if gamestate == "menu" then
@@ -118,4 +118,8 @@ function love.mousereleased(x, y, button, isTouch)
   else
     love.mouse.setCursor(cursor_normal)
   end
+end
+
+function love.keypressed(key)
+  presskey = key
 end
