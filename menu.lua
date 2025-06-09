@@ -364,6 +364,7 @@ function menu.mousepressed(x, y, button)
           level.loadlevel()
         end
       end
+    -- top right button (toggle mute, toggle fullscreen , quit game)
     elseif (x > screenWidth - uiSize * 1.2) and (y <= uiSize * 1.2) then
       if love.timer.getTime() - lastclick_time > 0.25 then
         love.event.push("quit")
@@ -425,15 +426,6 @@ function menu.level_solve(str)
           end
         end
       end
-    end
-  end
-  if steam_running then
-    if solve_tot == level_num then
-      pcall(steam.setAchievements, "END")
-    end
-    local ans2 = string.match(str, "%d+")
-    if ans2 ~= nil and solve_cnt[tonumber(ans2)] == 11 then
-      pcall(steam.setAchievements, "C" .. ans2)
     end
   end
 end
