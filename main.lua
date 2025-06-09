@@ -17,7 +17,6 @@ AllIsVisible = true
 AllIsSolve = true
 HideUnfinish = false
 isDemo = false
-steam_running = true
 isDebug = false
 solve_tot = 0
 
@@ -54,12 +53,6 @@ game_start_time = love.timer.getTime()
 
 presskey = "none"
 
-steam = require("sworks.main")
-
-function steam_init111()
-  init_ans = steam.init()
-end
-
 function love.load()
   if isDebug ~= true then
     AllIsVisible = false
@@ -78,24 +71,6 @@ function love.load()
   menu.load()
   gamestate = "menu"
   love.mouse.setCursor(cursor_normal)
-  if steam_running then
-    steam_init111()
-    if not init_ans then
-      print("steam init failed")
-      drawDebugText = "steam init failed"
-      steam_running = false
-    elseif not steam.isConnected() then
-      print("steam not connected")
-      drawDebugText = "steam not connected"
-      steam_running = false
-    else
-      assert(steam.init() and steam.isRunning(), "Steam client must be running")
-      assert(steam.isConnected(), "Steam is in Offline mode")
-      user = steam.getUser()
-      print("hello " .. user:getName())
-      drawDebugText = "hello " .. user:getName()
-    end
-  end
 
   now_time = love.timer.getTime()
   print(now_time - game_start_time)
@@ -106,9 +81,6 @@ function love.load()
   love.window.setMode(screenWidth, screenHeight, { resizable = true, vsync = false, minwidth = 0, minheight = 0 })
   love.window.setFullscreen(isfullscreen, "desktop")
   --love.window.setFullscreen(true,"desktop")
-
-  --	lib.SteamAPI_Init()
-  --	userstats_ptr = lib.SteamUserStats()
 end
 
 iiiii = 0
