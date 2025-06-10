@@ -465,6 +465,7 @@ function menu.load()
   unlocked_world = {}
   unlocked_symbol = {}
   menu_panel = ReadCSV("map.csv")
+  printTable(menu_panel)
   mapWidth = len(menu_panel[1])
   mapHeight = len(menu_panel)
   gamestate = "menu"

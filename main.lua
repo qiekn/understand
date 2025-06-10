@@ -22,7 +22,7 @@ AllIsVisible = true
 AllIsSolve = true
 HideUnfinish = false
 isDemo = false
-isDebug = false
+isDebug = true
 solve_tot = 0
 
 cursor_normal = love.mouse.newCursor("assets/images/c1_transparent.png", 16, 16)
