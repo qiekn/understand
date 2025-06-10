@@ -1,4 +1,5 @@
 require("graph/alphabet")
+local menu = require("menu")
 
 level = {}
 visit = {}

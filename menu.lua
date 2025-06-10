@@ -1,125 +1,164 @@
-menu = {}
-menu_panel = {}
-level_lines = {}
-required_levels = {}
+-- 菜单系统模块
+local menu = {}
 
-select = { x = -100, y = -100 }
+-- 全局变量初始化
+local gameData = {
+  menu_panel = {},
+  level_lines = {},
+  required_levels = {},
+  select = { x = -100, y = -100 },
+  fontsize = 0,
+  solve_cnt = {},
+  level_time = {},
+  mute = 0,
+  isfullscreen = false,
+  mapWidth = 0,
+  mapHeight = 0,
+  unlocked_world = {},
+  unlocked_symbol = {},
+}
 
-fontsize = 0
-solve_cnt = {}
+local ui = {
+  uiSize = 0,
+  boxwidth = 0,
+  linewidth = 0,
+  mapleft = 0,
+  maptop = 0,
+  font = nil,
+  font2 = nil,
+}
 
-mute = 0
-
-level_time = {}
-
-sound_sprite = love.graphics.newImage("assets/images/sound.png")
-
-isfullscreen = false
+-- 音效资源
+local sound_sprite = love.graphics.newImage("assets/images/sound.png")
 
 function menu.load()
-  unlocked_world = {}
-  unlocked_symbol = {}
-  menu_panel = ReadCSV("map.csv")
-  printTable(menu_panel)
-  mapWidth = len(menu_panel[1])
-  mapHeight = len(menu_panel)
+  initData()
+  loadMapData()
+  setupPuzzleReveal()
+  calculateSolveCount()
+end
+
+-- 初始化游戏数据
+function initData()
+  gameData.unlocked_world = {}
+  gameData.unlocked_symbol = {}
   gamestate = "menu"
-  local tmp = {}
-  for i = 1, mapWidth do
-    tmp[i] = {}
-    for j = 1, mapHeight do
-      tmp[i][j] = menu_panel[j][i]
+
+  -- 初始化解题计数
+  gameData.solve_cnt = {}
+  for i = 1, 12 do
+    gameData.solve_cnt[i] = 0
+  end
+end
+
+-- 加载地图数据
+function loadMapData()
+  gameData.menu_panel = ReadCSV("map.csv")
+  gameData.mapWidth = len(gameData.menu_panel[1])
+  gameData.mapHeight = len(gameData.menu_panel)
+
+  -- 转置地图数据以适应坐标系
+  local transposed = {}
+  for i = 1, gameData.mapWidth do
+    transposed[i] = {}
+    for j = 1, gameData.mapHeight do
+      transposed[i][j] = gameData.menu_panel[j][i]
     end
   end
-  menu_panel = tmp
+  gameData.menu_panel = transposed
+end
 
-  for i = 1, mapWidth do
+-- 设置谜题显示状态
+function setupPuzzleReveal()
+  for i = 1, gameData.mapWidth do
     if puzzle_reveal[i] == nil then
       puzzle_reveal[i] = {}
     end
-    for j = 1, mapHeight do
-      if puzzle_reveal[i][j] == nil then
-        puzzle_reveal[i][j] = 0
-      end
 
-      if (menu_panel[i][j] ~= "XXX") and (menu_panel[i][j] ~= "Sound") then
-        if AllIsVisible then
-          if puzzle_reveal[i][j] ~= 2 then
-            puzzle_reveal[i][j] = 1
-            if AllIsSolve then
-              puzzle_reveal[i][j] = 2
-            end
-          end
-        end
-        if
-          string.match(menu_panel[i][j], "%d+") ~= nil
-          and tonumber(string.match(menu_panel[i][j], "%d+")) >= 4
-          and isDemo
-        then
-          menu_panel[i][j] = "XXX"
-        elseif len(menu_panel[i][j]) >= 3 then
-          --          required_levels[menu_panel[i][j]]=require("level."..menu_panel[i][j])
-          --          print(type(required_levels[menu_panel[i][j]]))
-          if menu_panel[i][j] == "1-1" and puzzle_reveal[i][j] ~= 2 then
-            puzzle_reveal[i][j] = 1
-            if select.x < 0 then
-              select.x = i
-              select.y = j
-            end
-          end
-        end
-      end
-      if puzzle_reveal[i][j] >= 1 then
-        if menu_panel[i][j] == nil then
-          ans = nil
-        else
-          ans = string.match(menu_panel[i][j], "%d+")
-        end
-        if ans ~= nil then
-          unlocked_world[tonumber(ans)] = true
-          if puzzle_reveal[i][j] == 2 then
-            unlocked_symbol[tonumber(ans)] = true
-          end
-        end
+    for j = 1, gameData.mapHeight do
+      initPuzzleCell(i, j)
+      updateUnlockedStatus(i, j)
+    end
+  end
+
+  -- 处理预设解锁关卡
+  processRevealList()
+
+  -- 如果开启全部可见模式
+  unlockAllWorlds()
+  -- if AllIsVisible then
+  --   print("unlock all worlds")
+  --   unlockAllWorlds()
+  -- end
+end
+
+-- 初始化单个谜题格子
+function initPuzzleCell(i, j)
+  if puzzle_reveal[i][j] == nil then
+    puzzle_reveal[i][j] = 0
+  end
+
+  local cell = gameData.menu_panel[i][j]
+  if cell == "XXX" or cell == "Sound" then
+    return
+  end
+
+  -- 处理演示模式限制
+  if isDemo and isDemoRestricted(cell) then
+    gameData.menu_panel[i][j] = "XXX"
+    return
+  end
+
+  -- 处理起始关卡 1-1
+  if cell == "1-1" and puzzle_reveal[i][j] ~= 2 then
+    puzzle_reveal[i][j] = 1
+    if gameData.select.x < 0 then
+      gameData.select.x = i
+      gameData.select.y = j
+    end
+  end
+
+  -- 设置全部可见模式下的状态
+  if AllIsVisible and len(cell) >= 3 then
+    if puzzle_reveal[i][j] ~= 2 then
+      puzzle_reveal[i][j] = 1
+      if AllIsSolve then
+        puzzle_reveal[i][j] = 2
       end
     end
   end
+end
+
+-- 检查演示模式限制
+function isDemoRestricted(cell)
+  local levelNum = string.match(cell, "%d+")
+  return levelNum ~= nil and tonumber(levelNum) >= 4
+end
+
+-- 更新解锁状态
+function updateUnlockedStatus(i, j)
+  if puzzle_reveal[i][j] >= 1 then
+    local cell = gameData.menu_panel[i][j]
+    local worldNum = string.match(cell, "%d+")
+
+    if worldNum ~= nil then
+      gameData.unlocked_world[tonumber(worldNum)] = true
+      if puzzle_reveal[i][j] == 2 then
+        gameData.unlocked_symbol[tonumber(worldNum)] = true
+      end
+    end
+  end
+end
+
+-- 处理预设解锁列表
+function processRevealList()
   if len(reveal) > 0 then
     for k = 1, len(reveal) do
-      for i = 1, mapWidth do
-        for j = 1, mapHeight do
-          if menu_panel[i][j] == reveal[k] then
+      for i = 1, gameData.mapWidth do
+        for j = 1, gameData.mapHeight do
+          if gameData.menu_panel[i][j] == reveal[k] then
             puzzle_reveal[i][j] = 2
-            menu.level_solve(menu_panel[i][j])
-          end
-        end
-      end
-    end
-  end
-  if AllIsVisible then
-    for i = 1, 12 do
-      unlocked_world[i] = true
-      unlocked_symbol[i] = true
-    end
-  end
-
-  solve_cnt = {}
-  for i = 1, 12 do
-    solve_cnt[i] = 0
-  end
-  solve_tot = 0
-  for i = 1, mapWidth do
-    for j = 1, mapHeight do
-      if menu_panel[i][j] == "END" then
-        if puzzle_reveal[i][j] == 2 then
-          solve_tot = solve_tot + 1
-        end
-      else
-        if menu_panel[i][j] ~= "XXX" and len(menu_panel[i][j]) > 2 and menu_panel[i][j] ~= "Sound" then
-          if puzzle_reveal[i][j] == 2 then
-            solve_tot = solve_tot + 1
-            local ans = string.match(menu_panel[i][j], "%d+")
-            solve_cnt[tonumber(ans)] = solve_cnt[tonumber(ans)] + 1
+            menu.level_solve(gameData.menu_panel[i][j])
           end
         end
       end
@@ -127,427 +166,331 @@ function menu.load()
   end
 end
 
+-- 解锁所有世界
+function unlockAllWorlds()
+  for i = 1, 12 do
+    gameData.unlocked_world[i] = true
+    gameData.unlocked_symbol[i] = true
+  end
+end
+
+-- 计算解题数量
+function calculateSolveCount()
+  solve_tot = 0
+
+  for i = 1, gameData.mapWidth do
+    for j = 1, gameData.mapHeight do
+      local cell = gameData.menu_panel[i][j]
+
+      if puzzle_reveal[i][j] == 2 then
+        if cell == "END" then
+          solve_tot = solve_tot + 1
+        elseif cell ~= "XXX" and len(cell) > 2 and cell ~= "Sound" then
+          solve_tot = solve_tot + 1
+          local worldNum = string.match(cell, "%d+")
+          if worldNum then
+            gameData.solve_cnt[tonumber(worldNum)] = gameData.solve_cnt[tonumber(worldNum)] + 1
+          end
+        end
+      end
+    end
+  end
+end
+
+-- 绘制菜单
 function menu.draw()
-  screenWidth = love.graphics.getWidth()
-  screenHeight = love.graphics.getHeight()
-
-  -- Get menu map grid count
-  maxH = 1
-  maxW = 1
-  for i = 1, mapWidth do
-    for j = 1, mapHeight do
-      if puzzle_reveal[i][j] ~= 0 then
-        --      if(puzzle_solved[menu_panel[i][j]]~=nil)then
-        if i > maxW then
-          maxW = i
-        end
-        if j > maxH then
-          maxH = j
-        end
-      end
-    end
-  end
-
-  uiSize = math.min(screenWidth / 15, screenHeight / 9)
-
-  -- Define boxwidth and line width
-  boxwidth = screenWidth * 0.8 / maxW
-  if screenHeight / maxH * 0.8 < boxwidth then
-    boxwidth = screenHeight / maxH * 0.8
-  end
-  if boxwidth > screenWidth / 6 then
-    boxwidth = screenWidth / 6
-  end
-  if boxwidth > screenHeight / 3 then
-    boxwidth = screenHeight / 3
-  end
-  if boxwidth > 200 then
-    boxwidth = (200 + boxwidth) / 2
-  end
-  local ttt = max((screenWidth - uiSize * 7) / maxW, (screenHeight - uiSize * 3) / maxH)
-  if ttt < boxwidth then
-    boxwidth = ttt
-  end
-  linewidth = boxwidth / 20
-  if linewidth < 1 then
-    linewidth = 1
-  end
-
-  mapleft = screenWidth / 2 - boxwidth * (maxW + 1) / 2
-  maptop = screenHeight / 2 - boxwidth * (maxH + 1) / 2
-
-  if boxwidth / 4 ~= fontsize then
-    fontsize = boxwidth / 4
-    if fontsize < 2 then
-      fontsize = 2
-    end
-    font = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize)
-    font2 = love.graphics.newFont(FONT_DIR .. "Han.otf", fontsize * 2)
-  end
-
-  backcolor = backcolor_menu
-
-  love.graphics.setBackgroundColor(backcolor)
-  love.graphics.setColor(frontcolor)
-  love.graphics.setLineStyle("smooth")
-  love.graphics.setLineWidth(linewidth)
-
-  for i = 1, mapWidth do
-    for j = 1, mapHeight do
-      boxX = mapleft + i * boxwidth
-      boxY = maptop + j * boxwidth
-      love.graphics.setLineWidth(linewidth)
-      love.graphics.setFont(font)
-
-      if get(menu_panel[i][j], 1, 2) == "EX" then
-        if (puzzle_reveal[i][j] ~= 0) or (AllIsVisible == true) then
-          local ans = string.match(menu_panel[i][j], "%d+")
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          frontcolor = frontcolors[tonumber(ans)]
-          love.graphics.setColor(frontcolor)
-          drawSquare(boxX, boxY, boxwidth * 0.7, true)
-          frontcolor = backcolors[tonumber(ans)]
-          love.graphics.setColor(frontcolor)
-          if puzzle_reveal[i][j] == 2 then
-            drawTick(boxX + 0.1 * boxwidth, boxY + 0.06 * boxwidth, boxwidth * 0.25)
-          end
-          drawText(boxX, boxY, ans .. "-?")
-        end
-      elseif menu_panel[i][j] == "END" then
-        if (puzzle_reveal[i][j] ~= 0) or (AllIsVisible == true) then
-          frontcolor = getBackColor(menu_panel[i][j])
-          love.graphics.setColor(frontcolor)
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          frontcolor = getFrontColor(menu_panel[i][j])
-          love.graphics.setColor(frontcolor)
-          drawText(boxX, boxY, "?")
-          if puzzle_reveal[i][j] == 2 then
-            drawTick(boxX + 0.1 * boxwidth, boxY + 0.06 * boxwidth, boxwidth * 0.25)
-          end
-        end
-      elseif get(menu_panel[i][j], 1, 1) == "#" then
-        love.graphics.setLineWidth(linewidth * 4)
-        local ans = string.match(menu_panel[i][j], "%d+")
-        love.graphics.setColor(midcolors[tonumber(ans)])
-        if i ~= 1 and menu_panel[i - 1][j] ~= "XXX" then
-          love.graphics.line(boxX, boxY, boxX - boxwidth * 0.5, boxY)
-        end
-        if i ~= mapWidth and menu_panel[i + 1][j] ~= "XXX" then
-          love.graphics.line(boxX, boxY, boxX + boxwidth * 0.5, boxY)
-        end
-        if j ~= 1 and menu_panel[i][j - 1] ~= "XXX" then
-          love.graphics.line(boxX, boxY, boxX, boxY - boxwidth * 0.5)
-        end
-        if j ~= mapHeight and menu_panel[i][j + 1] ~= "XXX" then
-          love.graphics.line(boxX, boxY, boxX, boxY + boxwidth * 0.5)
-        end
-      elseif len(menu_panel[i][j]) <= 2 then
-        local ans = menu_panel[i][j]
-        if ans == "1" then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          drawCircle(boxX - boxwidth * 0.2, boxY, boxwidth * 0.1, true)
-          love.graphics.line(boxX - boxwidth * 0.2, boxY, boxX + boxwidth * 0.2, boxY)
-          drawSquare(boxX + boxwidth * 0.2, boxY, boxwidth * 0.2, true)
-        end
-        if ans == "2" then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          drawSquare(boxX - boxwidth * 0.25, boxY - boxwidth * 0.22, boxwidth * 0.14, true)
-          drawCircle(boxX - boxwidth * 0.25, boxY, boxwidth * 0.07, true)
-          drawCircle(boxX, boxY, boxwidth * 0.07, true)
-          drawPolygon(boxX - boxwidth * 0.25, boxY + boxwidth * 0.25, boxwidth * 0.07, 3, -math.pi / 2, true)
-          drawPolygon(boxX, boxY + boxwidth * 0.25, boxwidth * 0.07, 3, -math.pi / 2, true)
-          drawPolygon(boxX + boxwidth * 0.25, boxY + boxwidth * 0.25, boxwidth * 0.07, 3, -math.pi / 2, true)
-        end
-        if ans == "3" and unlocked_symbol[2] == true then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          love.graphics.setLineWidth(linewidth / 2)
-          drawSquare(boxX, boxY + boxwidth * 0.2, boxwidth * 0.14, true)
-          drawCircle(boxX, boxY - boxwidth * 0.2, boxwidth * 0.08, true)
-          love.graphics.setLineWidth(linewidth)
-          love.graphics.line(
-            boxX - boxwidth * 0.2,
-            boxY - boxwidth * 0.4,
-            boxX + boxwidth * 0.2,
-            boxY - boxwidth * 0.4,
-            boxX + boxwidth * 0.2,
-            boxY,
-            boxX - boxwidth * 0.2,
-            boxY,
-            boxX - boxwidth * 0.2,
-            boxY + boxwidth * 0.4,
-            boxX + boxwidth * 0.2,
-            boxY + boxwidth * 0.4
-          )
-        end
-        if ans == "4" and (unlocked_symbol[3] == true or unlocked_symbol[4] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          love.graphics.setLineWidth(linewidth / 2)
-          drawSquare(boxX - boxwidth * 0.2, boxY - boxwidth * 0.2, boxwidth * 0.15, true)
-          drawSquare(boxX - boxwidth * 0.2, boxY - boxwidth * 0.05, boxwidth * 0.15, true)
-          drawSquare(boxX - boxwidth * 0.05, boxY - boxwidth * 0.2, boxwidth * 0.15, true)
-          drawSquare(boxX + boxwidth * 0.05, boxY + boxwidth * 0.05, boxwidth * 0.15, true)
-          drawSquare(boxX + boxwidth * 0.2, boxY + boxwidth * 0.05, boxwidth * 0.15, true)
-          drawSquare(boxX + boxwidth * 0.05, boxY + boxwidth * 0.2, boxwidth * 0.15, true)
-          --drawSquare(boxX+boxwidth*0.15,boxY+boxwidth*0.15,boxwidth*0.15,true)
-          --drawSquare(boxX+boxwidth*0.15,boxY+boxwidth*0.15,boxwidth*0.15,true)
-          --drawSquare(boxX+boxwidth*0.15,boxY+boxwidth*0.15,boxwidth*0.15,true)
-        end
-        if ans == "5" and (unlocked_symbol[3] == true or unlocked_symbol[5] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          drawTetris(boxX, boxY, boxwidth * 0.35, alphabet[5], true)
-        end
-        if ans == "6" and (unlocked_symbol[4] == true or unlocked_symbol[6] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          love.graphics.line(
-            boxX - boxwidth * 0.36,
-            boxY + boxwidth * 0.12,
-            boxX - boxwidth * 0.12,
-            boxY + boxwidth * 0.12,
-            boxX - boxwidth * 0.12,
-            boxY - boxwidth * 0.12,
-            boxX + boxwidth * 0.12,
-            boxY - boxwidth * 0.12,
-            boxX + boxwidth * 0.12,
-            boxY + boxwidth * 0.12,
-            boxX + boxwidth * 0.36,
-            boxY + boxwidth * 0.12
-          )
-        end
-        if ans == "7" and (unlocked_symbol[5] == true or unlocked_symbol[7] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          drawPolygon(boxX, boxY - boxwidth * 0.3, boxwidth * 0.12, 3, -math.pi / 2, true)
-          drawPolygon(boxX, boxY + boxwidth * 0.3, boxwidth * 0.12, 3, math.pi / 2, true)
-          drawPolygon(boxX + boxwidth * 0.3, boxY, boxwidth * 0.12, 3, 0, true)
-          drawPolygon(boxX - boxwidth * 0.3, boxY, boxwidth * 0.12, 3, math.pi, true)
-        end
-        if ans == "8" and (unlocked_symbol[6] == true or unlocked_symbol[8] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          local tt = {
-            "11",
-            "11",
-          }
-          drawTetris2(boxX, boxY, boxwidth * 0.5, tt, false)
-        end
-        if ans == "9" and (unlocked_symbol[7] == true or unlocked_symbol[9] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          love.graphics.line(
-            boxX - boxwidth * 0.25,
-            boxY - boxwidth * 0.15,
-            boxX + boxwidth * 0.15,
-            boxY - boxwidth * 0.15,
-            boxX + boxwidth * 0.15,
-            boxY + boxwidth * 0.25
-          )
-          drawStar(boxX + boxwidth * 0.15, boxY - boxwidth * 0.15, boxwidth * 0.2, 0.5, 5, -math.pi / 10, true)
-        end
-        if ans == "10" and (unlocked_symbol[8] == true or unlocked_symbol[9] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          for p = -1, 1 do
-            for q = -1, 1 do
-              love.graphics.setColor(frontcolors[p + 5 + q * 3])
-              drawCircle(boxX + p * boxwidth / 4, boxY + q * boxwidth / 4, boxwidth / 16, true)
-            end
-          end
-          --          love.graphics.setColor(frontcolors[tonumber(ans)])
-          --          love.graphics.setFont(font2)
-          --          love.graphics.printf("?", boxX-500, boxY-font2:getHeight()*0.35, 1000, "center")
-        end
-        if ans == "11" and (unlocked_symbol[7] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-        end
-        if ans == "12" and (unlocked_symbol[8] == true) and not isDemo then
-          love.graphics.setColor(midcolors[tonumber(ans)])
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          love.graphics.setColor(frontcolors[tonumber(ans)])
-          drawSmallLine(boxX, boxY, boxwidth, "RUR", false)
-        end
-      elseif menu_panel[i][j] ~= "XXX" then
-        love.graphics.setColor(getMidColor(menu_panel[i][j]))
-        --      local ans=string.match(menu_panel[i][j],"-%d+")
-        --      if ans=="-1" then
-        --        drawSquare(boxX,boxY,boxwidth-linewidth+1,true)
-        --      end
-        if (puzzle_reveal[i][j] ~= 0) or (AllIsVisible == true) then
-          drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
-          frontcolor = getBackColor(menu_panel[i][j])
-          love.graphics.setColor(frontcolor)
-          drawSquare(boxX, boxY, boxwidth * 0.7, true)
-          frontcolor = getFrontColor(menu_panel[i][j])
-          love.graphics.setColor(frontcolor)
-          drawSquare(boxX, boxY, boxwidth * 0.7, false)
-          if puzzle_reveal[i][j] == 2 then
-            drawTick(boxX + 0.1 * boxwidth, boxY + 0.06 * boxwidth, boxwidth * 0.25)
-          end
-          drawText(boxX, boxY, menu_panel[i][j])
-        end
-      end
-    end
-  end
-
-  boxX = mapleft + select.x * boxwidth
-  boxY = maptop + select.y * boxwidth
-  love.graphics.setColor(0, 0, 0)
-  drawSquare(boxX, boxY, boxwidth, false)
-
-  frontcolor = getFrontColor("END")
-  love.graphics.setColor(frontcolor)
-
-  line2 = math.min(screenWidth / 120, screenHeight / 80) / 3 * 2
-  if line2 < 1 then
-    line2 = 1
-  end
-  love.graphics.setLineWidth(line2)
-
+  calculateUILayout()
+  setupGraphics()
+  drawMenuGrid()
+  drawSelection()
   drawUI()
+
   if isDebug then
     drawTextLeft(100, 100, drawDebugText)
   end
   firstFrame = true
 end
 
-function menu.mousepressed(x, y, button)
-  if firstFrame ~= true then
+-- 计算UI布局
+function calculateUILayout()
+  local screenWidth = love.graphics.getWidth()
+  local screenHeight = love.graphics.getHeight()
+
+  -- 计算可见区域大小
+  local maxW, maxH = getVisibleMapSize()
+
+  ui.uiSize = math.min(screenWidth / 15, screenHeight / 9)
+  -- TODO: remove this <2025-06-11 02:42, @qiekn> --
+  uiSize = ui.uiSize
+  ui.boxwidth = calculateBoxSize(screenWidth, screenHeight, maxW, maxH)
+  ui.linewidth = math.max(ui.boxwidth / 20, 1)
+
+  ui.mapleft = screenWidth / 2 - ui.boxwidth * (maxW + 1) / 2
+  ui.maptop = screenHeight / 2 - ui.boxwidth * (maxH + 1) / 2
+
+  updateFonts()
+end
+
+-- 获取可见地图大小
+function getVisibleMapSize()
+  local maxW, maxH = 1, 1
+  for i = 1, gameData.mapWidth do
+    for j = 1, gameData.mapHeight do
+      if puzzle_reveal[i][j] ~= 0 then
+        maxW = math.max(maxW, i)
+        maxH = math.max(maxH, j)
+      end
+    end
+  end
+  return maxW, maxH
+end
+
+-- 计算格子大小
+function calculateBoxSize(screenWidth, screenHeight, maxW, maxH)
+  local boxwidth = screenWidth * 0.8 / maxW
+  boxwidth = math.min(boxwidth, screenHeight / maxH * 0.8)
+  boxwidth = math.min(boxwidth, screenWidth / 6)
+  boxwidth = math.min(boxwidth, screenHeight / 3)
+
+  if boxwidth > 200 then
+    boxwidth = (200 + boxwidth) / 2
+  end
+
+  local limit = math.max((screenWidth - ui.uiSize * 7) / maxW, (screenHeight - ui.uiSize * 3) / maxH)
+  return math.min(boxwidth, limit)
+end
+
+-- 更新字体
+function updateFonts()
+  local newFontSize = math.max(ui.boxwidth / 4, 2)
+  if newFontSize ~= gameData.fontsize then
+    gameData.fontsize = newFontSize
+    ui.font = love.graphics.newFont(FONT_DIR .. "Han.otf", gameData.fontsize)
+    ui.font2 = love.graphics.newFont(FONT_DIR .. "Han.otf", gameData.fontsize * 2)
+  end
+end
+
+-- 设置图形参数
+function setupGraphics()
+  love.graphics.setBackgroundColor(backcolor_menu)
+  love.graphics.setColor(frontcolor)
+  love.graphics.setLineStyle("smooth")
+  love.graphics.setLineWidth(ui.linewidth)
+  love.graphics.setFont(ui.font)
+end
+
+-- 绘制菜单网格
+function drawMenuGrid()
+  for i = 1, gameData.mapWidth do
+    for j = 1, gameData.mapHeight do
+      local boxX = ui.mapleft + i * ui.boxwidth
+      local boxY = ui.maptop + j * ui.boxwidth
+      drawMenuCell(i, j, boxX, boxY)
+    end
+  end
+end
+
+-- 绘制单个菜单格子
+function drawMenuCell(i, j, boxX, boxY)
+  local cell = gameData.menu_panel[i][j]
+  local isVisible = (puzzle_reveal[i][j] ~= 0) or AllIsVisible
+
+  if cell == "XXX" or not isVisible then
     return
   end
-  if button == 1 then
-    xx = math.floor((x - mapleft) / boxwidth + 0.5)
-    yy = math.floor((y - maptop) / boxwidth + 0.5)
-    if (xx > 0) and (yy > 0) and (xx <= mapWidth) and (yy <= mapHeight) then
-      if (menu_panel[xx][yy] ~= "XXX") and (len(menu_panel[xx][yy]) > 2) then
-        if menu_panel[xx][yy] == "Sound" then
-          mute = not mute
-          if not mute then
-            stopsound()
-            src5:play()
-          end
-          save()
-        elseif puzzle_reveal[xx][yy] >= 1 then
-          select = { x = xx, y = yy }
-          currentLevel = menu_panel[xx][yy]
-          level.loadlevel()
-        end
-      end
-    -- top right button (toggle mute, toggle fullscreen , quit game)
-    elseif (x > screenWidth - uiSize * 1.2) and (y <= uiSize * 1.2) then
-      if love.timer.getTime() - lastclick_time > 0.25 then
-        love.event.push("quit")
-      end
-    elseif (x > screenWidth - uiSize * 2.2) and (y <= uiSize * 1.2) then
-      isfullscreen = not isfullscreen
-      love.window.setFullscreen(isfullscreen, "desktop")
-      save()
-    elseif (x > screenWidth - uiSize * 3.2) and (y <= uiSize * 1.2) then
-      if mute <= 0 then
-        mute = 2
+
+  if string.sub(cell, 1, 2) == "EX" then
+    drawExtraLevel(boxX, boxY, cell, puzzle_reveal[i][j])
+  elseif cell == "END" then
+    drawEndLevel(boxX, boxY, puzzle_reveal[i][j])
+  elseif string.sub(cell, 1, 1) == "#" then
+    -- drawConnectionLine(i, j, boxX, boxY, cell)
+  elseif len(cell) <= 2 then
+    -- drawSymbolLevel(boxX, boxY, cell)
+  elseif cell ~= "Sound" then
+    drawNormalLevel(boxX, boxY, cell, puzzle_reveal[i][j])
+  end
+end
+
+function drawExtraLevel(boxX, boxY, cell, revealStatus)
+  local worldNum = tonumber(string.match(cell, "%d+"))
+  love.graphics.setColor(midcolors[worldNum])
+  drawSquare(boxX, boxY, ui.boxwidth - ui.linewidth + 1, true)
+
+  love.graphics.setColor(frontcolors[worldNum])
+  drawSquare(boxX, boxY, ui.boxwidth * 0.7, true)
+
+  love.graphics.setColor(backcolors[worldNum])
+  if revealStatus == 2 then
+    drawTick(boxX + 0.1 * ui.boxwidth, boxY + 0.06 * ui.boxwidth, ui.boxwidth * 0.25)
+  end
+  drawText(boxX, boxY, worldNum .. "-?")
+end
+
+function drawEndLevel(boxX, boxY, revealStatus)
+  love.graphics.setColor(getBackColor("END"))
+  drawSquare(boxX, boxY, ui.boxwidth - ui.linewidth + 1, true)
+
+  love.graphics.setColor(getFrontColor("END"))
+  drawText(boxX, boxY, "?")
+
+  if revealStatus == 2 then
+    drawTick(boxX + 0.1 * ui.boxwidth, boxY + 0.06 * ui.boxwidth, ui.boxwidth * 0.25)
+  end
+end
+
+function drawNormalLevel(boxX, boxY, cell, revealStatus)
+  love.graphics.setColor(getMidColor(cell))
+  drawSquare(boxX, boxY, ui.boxwidth - ui.linewidth + 1, true)
+
+  love.graphics.setColor(getBackColor(cell))
+  drawSquare(boxX, boxY, ui.boxwidth * 0.7, true)
+
+  love.graphics.setColor(getFrontColor(cell))
+  drawSquare(boxX, boxY, ui.boxwidth * 0.7, false)
+
+  if revealStatus == 2 then
+    drawTick(boxX + 0.1 * ui.boxwidth, boxY + 0.06 * ui.boxwidth, ui.boxwidth * 0.25)
+  end
+  drawText(boxX, boxY, cell)
+end
+
+function drawSelection()
+  local boxX = ui.mapleft + gameData.select.x * ui.boxwidth
+  local boxY = ui.maptop + gameData.select.y * ui.boxwidth
+  love.graphics.setColor(0, 0, 0)
+  drawSquare(boxX, boxY, ui.boxwidth, false)
+end
+
+function menu.mousepressed(mx, my, button)
+  if not firstFrame or button ~= 1 then
+    return
+  end
+
+  -- local functions
+  local function isValidGridClick(x, y)
+    return x > 0 and y > 0 and x <= gameData.mapWidth and y <= gameData.mapHeight
+  end
+  local function handleGridClick(x, y)
+    local cell = gameData.menu_panel[x][y]
+    if cell == "XXX" or len(cell) <= 2 then
+      return
+    end
+    if puzzle_reveal[x][y] >= 1 then
+      gameData.select = { x = x, y = y }
+      currentLevel = cell
+      level.loadlevel()
+    end
+  end
+  local function handleUIClick(x, y)
+    local screenWidth = love.graphics.getWidth()
+    local function toggleMute() -- 切换静音
+      if gameData.mute <= 0 then
+        gameData.mute = 2
       else
-        mute = mute - 1
+        gameData.mute = gameData.mute - 1
       end
-      if mute ~= 2 then
+
+      if gameData.mute ~= 2 then
         stopsound()
         src5:play()
       end
       save()
     end
+    local function toggleFullscreen() -- 切换全屏
+      gameData.isfullscreen = not gameData.isfullscreen
+      love.window.setFullscreen(gameData.isfullscreen, "desktop")
+      save()
+    end
+    local function handleQuitClick() -- 处理退出点击
+      if love.timer.getTime() - lastclick_time > 0.25 then
+        love.event.push("quit")
+      end
+    end
+
+    if x > screenWidth - ui.uiSize * 1.2 and y <= ui.uiSize * 1.2 then
+      handleQuitClick()
+    elseif x > screenWidth - ui.uiSize * 2.2 and y <= ui.uiSize * 1.2 then
+      toggleFullscreen()
+    elseif x > screenWidth - ui.uiSize * 3.2 and y <= ui.uiSize * 1.2 then
+      toggleMute()
+    end
+  end
+
+  -- main logic
+  local clickedX = math.floor((mx - ui.mapleft) / ui.boxwidth + 0.5)
+  local clickedY = math.floor((my - ui.maptop) / ui.boxwidth + 0.5)
+
+  if isValidGridClick(clickedX, clickedY) then
+    handleGridClick(clickedX, clickedY)
+  else
+    handleUIClick(x, y)
   end
 end
 
-function menu.level_solve(str)
-  mapWidth = len(menu_panel)
-  mapHeight = len(menu_panel[1])
-  for i = 1, mapWidth do
-    for j = 1, mapHeight do
-      if menu_panel[i][j] == str then
+-- 关卡完成处理
+function menu.level_solve(levelName)
+  markLevelSolved(levelName)
+  -- revealAdjacentLevels(levelName)
+  calculateSolveCount()
+end
+
+-- 标记关卡为已解决
+function markLevelSolved(levelName)
+  for i = 1, gameData.mapWidth do
+    for j = 1, gameData.mapHeight do
+      if gameData.menu_panel[i][j] == levelName then
         puzzle_reveal[i][j] = 2
-        local ans2 = string.match(menu_panel[i][j], "%d+")
-        if tonumber(ans2) ~= nil then
-          unlocked_symbol[tonumber(ans2)] = true
+        local worldNum = string.match(levelName, "%d+")
+        if worldNum then
+          gameData.unlocked_symbol[tonumber(worldNum)] = true
         end
-        reveal_level(i, j - 1, str)
-        reveal_level(i, j + 1, str)
-        reveal_level(i - 1, j, str)
-        reveal_level(i + 1, j, str)
-      end
-    end
-  end
-  solve_cnt = {}
-  for i = 1, 12 do
-    solve_cnt[i] = 0
-  end
-  solve_tot = 0
-  for i = 1, mapWidth do
-    for j = 1, mapHeight do
-      if menu_panel[i][j] == "END" then
-        if puzzle_reveal[i][j] == 2 then
-          solve_tot = solve_tot + 1
-        end
-      else
-        if menu_panel[i][j] ~= "XXX" and len(menu_panel[i][j]) > 2 and menu_panel[i][j] ~= "Sound" then
-          if puzzle_reveal[i][j] == 2 then
-            solve_tot = solve_tot + 1
-            local ans = string.match(menu_panel[i][j], "%d+")
-            solve_cnt[tonumber(ans)] = solve_cnt[tonumber(ans)] + 1
-          end
-        end
+
+        -- 显示相邻关卡
+        reveal_level(i, j - 1, levelName)
+        reveal_level(i, j + 1, levelName)
+        reveal_level(i - 1, j, levelName)
+        reveal_level(i + 1, j, levelName)
       end
     end
   end
 end
 
-function reveal_level(w, h, str)
-  if (h <= 0) or (w <= 0) or (h > mapHeight) or (w > mapWidth) then
+-- 显示相邻关卡
+function reveal_level(w, h, solvedLevel)
+  if w <= 0 or h <= 0 or w > gameData.mapWidth or h > gameData.mapHeight then
     return
   end
-  if menu_panel[w][h] == "XXX" or menu_panel[w][h] == "Sound" or len(menu_panel[w][h]) <= 2 then
+
+  local cell = gameData.menu_panel[w][h]
+  if cell == "XXX" or cell == "Sound" or len(cell) <= 2 then
     return
   end
-  local ans2 = string.match(str, "%d+")
-  if tonumber(ans2) == nil then
+
+  local solvedWorldNum = tonumber(string.match(solvedLevel, "%d+"))
+  if not solvedWorldNum then
     return
   end
+
   if puzzle_reveal[w][h] == 0 then
-    if menu_panel[w][h] == "END" then
+    if cell == "END" then
       puzzle_reveal[w][h] = 1
     else
-      local ans = string.match(menu_panel[w][h], "%d+")
-      if tonumber(ans) == nil or tonumber(ans2) > tonumber(ans) then
-        return
+      local cellWorldNum = tonumber(string.match(cell, "%d+"))
+      if cellWorldNum and solvedWorldNum >= cellWorldNum then
+        puzzle_reveal[w][h] = 1
+        gameData.unlocked_world[cellWorldNum] = true
       end
-      puzzle_reveal[w][h] = 1
-      unlocked_world[tonumber(ans)] = true
     end
   end
-  --  if(get(menu_panel[w][h],1)=="#")then
-  --    reveal_level(w,h-1,str)
-  --    reveal_level(w,h+1,str)
-  --    reveal_level(w-1,h,str)
-  --    reveal_level(w+1,h,str)
-  --  end
 end
 
+-- 重置菜单状态
 function menu.re()
   gamestate = "menu"
-  mapWidth = len(menu_panel)
-  mapHeight = len(menu_panel[1])
+  gameData.mapWidth = len(gameData.menu_panel)
+  gameData.mapHeight = len(gameData.menu_panel[1])
   save()
 end
+
+return menu
