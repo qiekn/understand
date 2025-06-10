@@ -16,10 +16,122 @@ sound_sprite = love.graphics.newImage("assets/images/sound.png")
 
 isfullscreen = false
 
+function menu.load()
+  unlocked_world = {}
+  unlocked_symbol = {}
+  menu_panel = ReadCSV("map.csv")
+  printTable(menu_panel)
+  mapWidth = len(menu_panel[1])
+  mapHeight = len(menu_panel)
+  gamestate = "menu"
+  local tmp = {}
+  for i = 1, mapWidth do
+    tmp[i] = {}
+    for j = 1, mapHeight do
+      tmp[i][j] = menu_panel[j][i]
+    end
+  end
+  menu_panel = tmp
+
+  for i = 1, mapWidth do
+    if puzzle_reveal[i] == nil then
+      puzzle_reveal[i] = {}
+    end
+    for j = 1, mapHeight do
+      if puzzle_reveal[i][j] == nil then
+        puzzle_reveal[i][j] = 0
+      end
+
+      if (menu_panel[i][j] ~= "XXX") and (menu_panel[i][j] ~= "Sound") then
+        if AllIsVisible then
+          if puzzle_reveal[i][j] ~= 2 then
+            puzzle_reveal[i][j] = 1
+            if AllIsSolve then
+              puzzle_reveal[i][j] = 2
+            end
+          end
+        end
+        if
+          string.match(menu_panel[i][j], "%d+") ~= nil
+          and tonumber(string.match(menu_panel[i][j], "%d+")) >= 4
+          and isDemo
+        then
+          menu_panel[i][j] = "XXX"
+        elseif len(menu_panel[i][j]) >= 3 then
+          --          required_levels[menu_panel[i][j]]=require("level."..menu_panel[i][j])
+          --          print(type(required_levels[menu_panel[i][j]]))
+          if menu_panel[i][j] == "1-1" and puzzle_reveal[i][j] ~= 2 then
+            puzzle_reveal[i][j] = 1
+            if select.x < 0 then
+              select.x = i
+              select.y = j
+            end
+          end
+        end
+      end
+      if puzzle_reveal[i][j] >= 1 then
+        if menu_panel[i][j] == nil then
+          ans = nil
+        else
+          ans = string.match(menu_panel[i][j], "%d+")
+        end
+        if ans ~= nil then
+          unlocked_world[tonumber(ans)] = true
+          if puzzle_reveal[i][j] == 2 then
+            unlocked_symbol[tonumber(ans)] = true
+          end
+        end
+      end
+    end
+  end
+  if len(reveal) > 0 then
+    for k = 1, len(reveal) do
+      for i = 1, mapWidth do
+        for j = 1, mapHeight do
+          if menu_panel[i][j] == reveal[k] then
+            puzzle_reveal[i][j] = 2
+            menu.level_solve(menu_panel[i][j])
+          end
+        end
+      end
+    end
+  end
+  if AllIsVisible then
+    for i = 1, 12 do
+      unlocked_world[i] = true
+      unlocked_symbol[i] = true
+    end
+  end
+
+  solve_cnt = {}
+  for i = 1, 12 do
+    solve_cnt[i] = 0
+  end
+  solve_tot = 0
+  for i = 1, mapWidth do
+    for j = 1, mapHeight do
+      if menu_panel[i][j] == "END" then
+        if puzzle_reveal[i][j] == 2 then
+          solve_tot = solve_tot + 1
+        end
+      else
+        if menu_panel[i][j] ~= "XXX" and len(menu_panel[i][j]) > 2 and menu_panel[i][j] ~= "Sound" then
+          if puzzle_reveal[i][j] == 2 then
+            solve_tot = solve_tot + 1
+            local ans = string.match(menu_panel[i][j], "%d+")
+            solve_cnt[tonumber(ans)] = solve_cnt[tonumber(ans)] + 1
+          end
+        end
+      end
+    end
+  end
+end
+
 function menu.draw()
   screenWidth = love.graphics.getWidth()
   screenHeight = love.graphics.getHeight()
 
+  -- Get menu map grid count
   maxH = 1
   maxW = 1
   for i = 1, mapWidth do
@@ -38,6 +150,7 @@ function menu.draw()
 
   uiSize = math.min(screenWidth / 15, screenHeight / 9)
 
+  -- Define boxwidth and line width
   boxwidth = screenWidth * 0.8 / maxW
   if screenHeight / maxH * 0.8 < boxwidth then
     boxwidth = screenHeight / maxH * 0.8
@@ -88,7 +201,6 @@ function menu.draw()
 
       if get(menu_panel[i][j], 1, 2) == "EX" then
         if (puzzle_reveal[i][j] ~= 0) or (AllIsVisible == true) then
-          --        if(puzzle_solved[menu_panel[i][j]]~=nil)or(AllIsVisible==true)then
           local ans = string.match(menu_panel[i][j], "%d+")
           love.graphics.setColor(midcolors[tonumber(ans)])
           drawSquare(boxX, boxY, boxwidth - linewidth + 1, true)
@@ -113,31 +225,7 @@ function menu.draw()
           if puzzle_reveal[i][j] == 2 then
             drawTick(boxX + 0.1 * boxwidth, boxY + 0.06 * boxwidth, boxwidth * 0.25)
           end
-          --          love.graphics.setColor(frontcolor)
-          --          drawSquare(boxX,boxY,boxwidth*0.7,true)
         end
-        --  elseif(string.find(menu_panel[i][j],"*")~=nil)then
-        --[[
-        local ans=string.match(menu_panel[i][j],"%d+")
-        local ans2=string.match(menu_panel[i][j],"%d+")
-        love.graphics.setColor(midcolors[tonumber(ans)])
-        drawSquare(boxX,boxY,boxwidth-linewidth+1,true)
-        frontcolor=frontcolors[tonumber(ans)]
-        love.graphics.setColor(frontcolor)
-        drawSquare(boxX,boxY,boxwidth*0.7,true)
-        frontcolor=backcolors[tonumber(ans)]
-        love.graphics.setColor(frontcolor)
-        drawText(boxX,boxY,ans2)]]
-        --      elseif menu_panel[i][j]=="Sound" then
-        --        frontcolor=getBackColor(menu_panel[i][j])
-        --        love.graphics.setColor(frontcolor)
-        --        drawSquare(boxX,boxY,boxwidth-linewidth+1,true)
-        --      frontcolor=getFrontColor(menu_panel[i][j])
-        --    love.graphics.setColor(frontcolor)
-        --  drawSprite(boxX,boxY,boxwidth*0.5,sound_sprite)
-        --if mute==3 then
-        --  love.graphics.line(boxX-boxwidth*0.3,boxY-boxwidth*0.3,boxX+boxwidth*0.3,boxY+boxwidth*0.3)
-        --end
       elseif get(menu_panel[i][j], 1, 1) == "#" then
         love.graphics.setLineWidth(linewidth * 4)
         local ans = string.match(menu_panel[i][j], "%d+")
@@ -338,10 +426,6 @@ function menu.draw()
   firstFrame = true
 end
 
-function menu.update() end
-
-function menu.keypressed(key, scancode, isrepeat) end
-
 function menu.mousepressed(x, y, button)
   if firstFrame ~= true then
     return
@@ -459,143 +543,6 @@ function reveal_level(w, h, str)
   --    reveal_level(w-1,h,str)
   --    reveal_level(w+1,h,str)
   --  end
-end
-
-function menu.load()
-  unlocked_world = {}
-  unlocked_symbol = {}
-  menu_panel = ReadCSV("map.csv")
-  printTable(menu_panel)
-  mapWidth = len(menu_panel[1])
-  mapHeight = len(menu_panel)
-  gamestate = "menu"
-  local tmp = {}
-  for i = 1, mapWidth do
-    tmp[i] = {}
-    for j = 1, mapHeight do
-      tmp[i][j] = menu_panel[j][i]
-    end
-  end
-  menu_panel = tmp
-
-  for i = 1, mapWidth do
-    if puzzle_reveal[i] == nil then
-      puzzle_reveal[i] = {}
-    end
-    for j = 1, mapHeight do
-      if puzzle_reveal[i][j] == nil then
-        puzzle_reveal[i][j] = 0
-      end
-
-      if (menu_panel[i][j] ~= "XXX") and (menu_panel[i][j] ~= "Sound") then
-        if AllIsVisible then
-          if puzzle_reveal[i][j] ~= 2 then
-            puzzle_reveal[i][j] = 1
-            if AllIsSolve then
-              puzzle_reveal[i][j] = 2
-            end
-          end
-        end
-        if
-          string.match(menu_panel[i][j], "%d+") ~= nil
-          and tonumber(string.match(menu_panel[i][j], "%d+")) >= 4
-          and isDemo
-        then
-          menu_panel[i][j] = "XXX"
-        elseif len(menu_panel[i][j]) >= 3 then
-          --          required_levels[menu_panel[i][j]]=require("level."..menu_panel[i][j])
-          --          print(type(required_levels[menu_panel[i][j]]))
-          if menu_panel[i][j] == "1-1" and puzzle_reveal[i][j] ~= 2 then
-            puzzle_reveal[i][j] = 1
-            if select.x < 0 then
-              select.x = i
-              select.y = j
-            end
-          end
-        end
-      end
-      if puzzle_reveal[i][j] >= 1 then
-        if menu_panel[i][j] == nil then
-          ans = nil
-        else
-          ans = string.match(menu_panel[i][j], "%d+")
-        end
-        if ans ~= nil then
-          unlocked_world[tonumber(ans)] = true
-          if puzzle_reveal[i][j] == 2 then
-            unlocked_symbol[tonumber(ans)] = true
-          end
-        end
-      end
-    end
-  end
-  if len(reveal) > 0 then
-    for k = 1, len(reveal) do
-      for i = 1, mapWidth do
-        for j = 1, mapHeight do
-          if menu_panel[i][j] == reveal[k] then
-            puzzle_reveal[i][j] = 2
-            menu.level_solve(menu_panel[i][j])
-          end
-        end
-      end
-    end
-  end
-  if AllIsVisible then
-    for i = 1, 12 do
-      unlocked_world[i] = true
-      unlocked_symbol[i] = true
-    end
-  end
-
-  solve_cnt = {}
-  for i = 1, 12 do
-    solve_cnt[i] = 0
-  end
-  solve_tot = 0
-  for i = 1, mapWidth do
-    for j = 1, mapHeight do
-      if menu_panel[i][j] == "END" then
-        if puzzle_reveal[i][j] == 2 then
-          solve_tot = solve_tot + 1
-        end
-      else
-        if menu_panel[i][j] ~= "XXX" and len(menu_panel[i][j]) > 2 and menu_panel[i][j] ~= "Sound" then
-          if puzzle_reveal[i][j] == 2 then
-            solve_tot = solve_tot + 1
-            local ans = string.match(menu_panel[i][j], "%d+")
-            solve_cnt[tonumber(ans)] = solve_cnt[tonumber(ans)] + 1
-          end
-        end
-      end
-    end
-  end
-
-  print("hello")
-  --[[  menu_sprites={}
-  menu_sprites["1"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["2"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["3"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["4"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["5"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["6"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["7"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["8"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["9"]=love.graphics.newImage("assets/images/world1.png")
-  menu_sprites["10"]=love.graphics.newImage("assets/images/world1.png")
-]]
-  --[[  local board_total=0
-  for i=1,len(menu_panel) do
-    for j=1,len(menu_panel[1]) do
-      if menu_panel[i][j]~="XXX" and len(menu_panel[i][j])>=3 then
-        currentLevel=menu_panel[i][j]
-        level.loadlevel()
-        print(currentLevel,panel_cnt)
-        board_total=board_total+panel_cnt
-      end
-    end
-  end
-  print(board_total)]]
 end
 
 function menu.re()

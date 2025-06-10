@@ -22,7 +22,7 @@ AllIsVisible = true
 AllIsSolve = true
 HideUnfinish = false
 isDemo = false
-isDebug = true
+isDebug = false
 solve_tot = 0
 
 cursor_normal = love.mouse.newCursor("assets/images/c1_transparent.png", 16, 16)
@@ -85,14 +85,24 @@ end
 function love.update(dt)
   presskey = "none"
   collectgarbage("collect")
-  if gamestate == "menu" then
+  if gamestate == "menu" and menu.update ~= nil then
     menu.update()
-  elseif gamestate == "ready" or gamestate == "draw" then
+  elseif gamestate == "ready" or gamestate == "draw" and level.update ~= nil then
     level.update()
   end
 end
 
 function love.draw()
+  if isDebug then
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.print("FPS: " .. tostring(love.timer.getFPS()), 10, 10)
+    love.graphics.print("Gamestate: " .. gamestate, 10, 30)
+    love.graphics.print("Presskey: " .. presskey, 10, 50)
+    love.graphics.print("Lastkey: " .. lastkey, 10, 70)
+    love.graphics.print("Lastclick time: " .. tostring(lastclick_time), 10, 90)
+    love.graphics.print("Lastkey time: " .. tostring(lastkey_time), 10, 110)
+    love.graphics.print("Solve total: " .. solve_tot, 10, 130)
+  end
   if gamestate == "menu" then
     menu.draw()
   elseif gamestate == "ready" or gamestate == "draw" then
